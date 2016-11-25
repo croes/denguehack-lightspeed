@@ -134,7 +134,7 @@ public class App {
 
         StateFeatureMetadataEncoder metadataEncoder = new StateFeatureMetadataEncoder();
         modelEncoder.setFeatureMetaDataProvider(metadataEncoder);
-        modelEncoder.export(geojsonModel, "/tmp/output.geojson");
+        modelEncoder.export(geojsonModel, "/home/luciad/data/malasia_cleaned.geojson");
     }
 
     private static ILcdDataObject findState(ILcdModel stateModel, ILcdPoint point) {
