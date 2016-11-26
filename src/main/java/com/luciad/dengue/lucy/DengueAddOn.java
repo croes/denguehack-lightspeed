@@ -5,7 +5,6 @@ import com.luciad.contour.TLcdIntervalContour;
 import com.luciad.contour.TLcdLonLatComplexPolygonContourBuilder;
 import com.luciad.contour.TLcdValuedContour;
 import com.luciad.dengue.util.DateUtils;
-import com.luciad.dengue.util.RasterStyler;
 import com.luciad.dengue.util.TimeBasedModel;
 import com.luciad.dengue.view.DengueFilter;
 import com.luciad.dengue.weather.*;
@@ -27,8 +26,6 @@ import com.luciad.model.TLcdVectorModel;
 import com.luciad.reference.TLcdGeodeticReference;
 import com.luciad.shape.ILcdShape;
 import com.luciad.util.ILcdFunction;
-import com.luciad.util.TLcdColorMap;
-import com.luciad.util.TLcdInterval;
 import com.luciad.view.lightspeed.ILspView;
 import com.luciad.view.lightspeed.layer.ILspInteractivePaintableLayer;
 import com.luciad.view.lightspeed.layer.ILspLayer;
@@ -36,6 +33,7 @@ import com.luciad.view.lightspeed.layer.TLspPaintRepresentationState;
 import com.luciad.view.lightspeed.layer.TLspPaintState;
 import com.luciad.view.lightspeed.layer.raster.TLspRasterLayerBuilder;
 import com.luciad.view.lightspeed.layer.shape.TLspShapeLayerBuilder;
+import com.luciad.view.lightspeed.style.styler.ALspStyler;
 import samples.gxy.contour.ContourLevels;
 import samples.lightspeed.timeview.TimeSlider;
 
@@ -43,6 +41,7 @@ import java.awt.*;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by tomc on 25/11/2016.
@@ -50,6 +49,7 @@ import java.util.Map;
 public class DengueAddOn extends ALcyPreferencesAddOn {
 
   private TimeViewPanelTool timeViewPanelTool;
+  private DengueFilter fDengueFilter;
 
   public DengueAddOn() {
     super(ALcyTool.getLongPrefixWithClassName(DengueAddOn.class),
@@ -63,8 +63,8 @@ public class DengueAddOn extends ALcyPreferencesAddOn {
     timeViewPanelTool = new TimeViewPanelTool(getPreferences(), getLongPrefix(), getShortPrefix());
     timeViewPanelTool.plugInto(getLucyEnv());
 
-    DengueFilter dengueFilter = new DengueFilter();
-    FilterPanelTool filterTool = new FilterPanelTool(getPreferences(), getLongPrefix(), getShortPrefix(), dengueFilter);
+    fDengueFilter = new DengueFilter();
+    FilterPanelTool filterTool = new FilterPanelTool(getPreferences(), getLongPrefix(), getShortPrefix(), fDengueFilter);
     filterTool.plugInto(aLucyEnv);
 
     System.out.println("Loading data loader");
@@ -81,21 +81,13 @@ public class DengueAddOn extends ALcyPreferencesAddOn {
   private void loadData(ILspView aView) throws IOException {
     //Weather
     System.out.println("Loading weather data");
-    addWeatherData(new WeatherModelFactory(), WeatherModelFactory.PRECIPITATION,
-                   new double[]{
-                       Short.MIN_VALUE,
-                       0.0,
-                       1000.0,
-                       Short.MAX_VALUE
-                   },
-                   new Color[]{
-                       new Color(0, true),
-                       new Color(0, true),
-                       new Color(0, 13, 52, 128),
-                       new Color(0, true),
-                       },
-                   aView,
-                   timeViewPanelTool.getTimeSlider());
+    PrecipitationStyler precipitationStyler = new PrecipitationStyler();
+    addWeatherData(
+        new WeatherModelFactory(), WeatherModelFactory.PRECIPITATION,
+        precipitationStyler, aView,
+        timeViewPanelTool.getTimeSlider()
+    );
+    fDengueFilter.setPrecipitationStyler(precipitationStyler);
 
       //Contours
     TLcd2DBoundsIndexedModel contourModel = new TLcd2DBoundsIndexedModel();
@@ -176,8 +168,7 @@ public class DengueAddOn extends ALcyPreferencesAddOn {
   }
 
   private TimeBasedModel addWeatherData(WeatherModelFactory aWeatherModelFactory, WeatherModelFactory.MonthlyData aData,
-                                        double[] aLevels, Color[] aColors,
-                                        ILspView aView, TimeSlider aTimeSlider) throws IOException {
+                                        ALspStyler aStyler, ILspView aView, TimeSlider aTimeSlider) throws IOException {
     int FIRST_YEAR = 2005;
     int LAST_YEAR = 2009;
     TimeBasedModel model = aWeatherModelFactory.createMonthlyModel(
@@ -189,13 +180,14 @@ public class DengueAddOn extends ALcyPreferencesAddOn {
             .model(model)
             .styler(
                 TLspPaintRepresentationState.REGULAR_BODY,
-                new RasterStyler(new TLcdColorMap(new TLcdInterval(Short.MIN_VALUE, Short.MAX_VALUE), aLevels, aColors))
+                aStyler
             )
             .build()
     );
 
+    long timeOffset = TimeUnit.DAYS.toMillis(356 * (2016 - 2009)); // fudge data from 2009 to 2016
     EventQueue.invokeLater(() -> {
-      aTimeSlider.addChangeListener(e -> model.setTime(aTimeSlider.getTime()));
+      aTimeSlider.addChangeListener(e -> model.setTime(aTimeSlider.getTime() - timeOffset));
       aTimeSlider.setValidRange(DateUtils.date(FIRST_YEAR, 1).toEpochSecond() * 1000,
                                 DateUtils.date(LAST_YEAR, 12).toEpochSecond() * 1000,
                                 0, 1000);

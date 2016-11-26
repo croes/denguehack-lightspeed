@@ -1,5 +1,7 @@
 package com.luciad.dengue.view;
 
+import com.luciad.dengue.lucy.PrecipitationStyler;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,6 +11,7 @@ import java.util.List;
 public class DengueFilter {
 
   private List<String> parameterNames;
+  private PrecipitationStyler fPrecipitationStyler;
 
   public DengueFilter() {
     parameterNames =  new ArrayList<>();
@@ -33,6 +36,12 @@ public class DengueFilter {
   }
 
   public void updateFilter(String aParameterName, boolean selected, double min, double max) {
+    if(aParameterName.equalsIgnoreCase("Precipitation")) {
+      fPrecipitationStyler.setRangeFilter(min * 10, max * 10);
+    }
+  }
 
+  public void setPrecipitationStyler(PrecipitationStyler aPrecipitationStyler) {
+    fPrecipitationStyler = aPrecipitationStyler;
   }
 }
