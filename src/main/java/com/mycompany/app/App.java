@@ -29,7 +29,7 @@ public class App {
 
     public static void main(String[] args) throws IOException {
         TLcdSHPModelDecoder decoder = new TLcdSHPModelDecoder();
-        ILcdModel stateModel = decoder.decode("/home/luciad/data/dengue/malaysia/spatial_data/MYS_adm2.shp");
+        ILcdModel stateModel = decoder.decode("/home/luciad/Data/malaysia/spatial_data/MYS_adm2.shp");
         Enumeration elements = stateModel.elements();
 
         HashMap<String, ILcdDataObject> stateMap = new HashMap<>();
@@ -40,7 +40,7 @@ public class App {
         }
 
         CSVModelDecoder csvModelDecoder = new CSVModelDecoder();
-        ILcdModel decode = csvModelDecoder.decode("/home/luciad/data/dengue/malaysia/data/MYS_HealthMap_DengueCases.csv");
+        ILcdModel decode = csvModelDecoder.decode("/home/luciad/Data/malaysia/data/MYS_HealthMap_DengueCases.csv");
         Enumeration elements1 = decode.elements();
 
         ILcdModel geojsonModel = new TLcdVectorModel(new TLcdGeodeticReference(), new TLcdModelDescriptor());
@@ -134,7 +134,7 @@ public class App {
 
         StateFeatureMetadataEncoder metadataEncoder = new StateFeatureMetadataEncoder();
         modelEncoder.setFeatureMetaDataProvider(metadataEncoder);
-        modelEncoder.export(geojsonModel, "/home/luciad/data/malasia_cleaned.geojson");
+        modelEncoder.export(geojsonModel, "/home/luciad/Data/malasia_cleaned.geojson");
     }
 
     private static ILcdDataObject findState(ILcdModel stateModel, ILcdPoint point) {
