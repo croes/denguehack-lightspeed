@@ -20,7 +20,7 @@
  * OR INABILITY TO USE SOFTWARE, EVEN IF LUCIAD HAS BEEN ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGES.
  */
-package com.mycompany.app.csv;
+package com.luciad.dengue.csv;
 
 import java.nio.file.Paths;
 import java.util.Set;

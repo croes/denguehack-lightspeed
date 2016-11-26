@@ -1,4 +1,4 @@
-package com.mycompany.app;
+package com.luciad.dengue;
 
 import com.luciad.datamodel.*;
 import com.luciad.format.geojson.TLcdFeatureMetaDataProvider;
@@ -12,7 +12,7 @@ import com.luciad.shape.ILcdPoint;
 import com.luciad.shape.ILcdShape;
 import com.luciad.shape.TLcdShapeList;
 import com.luciad.shape.shape2D.TLcdLonLatPoint;
-import com.mycompany.app.csv.CSVModelDecoder;
+import com.luciad.dengue.csv.CSVModelDecoder;
 
 import java.io.IOException;
 import java.text.DateFormat;
