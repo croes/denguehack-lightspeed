@@ -7,7 +7,7 @@ import com.luciad.util.iso19103.ILcdISO19103UnitOfMeasure;
 import com.luciad.util.iso19103.TLcdISO19103MeasureTypeCodeExtension;
 import com.luciad.util.iso19103.TLcdUnitOfMeasureFactory;
 import com.luciad.dengue.util.DataSet;
-import com.luciad.dengue.util.TimeBaseModel;
+import com.luciad.dengue.util.TimeBasedModel;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,7 +31,7 @@ public class WeatherModelFactory {
       TLcdUnitOfMeasureFactory.createUnitOfMeasure("Daily mean temperature", "degrees", TLcdISO19103MeasureTypeCodeExtension.TEMPERATURE, "degrees", 1, 1)
   );
 
-  public TimeBaseModel createMonthlyModel(MonthlyData aData, int aFirstYear, int aLastYear) throws IOException {
+  public TimeBasedModel createMonthlyModel(MonthlyData aData, int aFirstYear, int aLastYear) throws IOException {
     File file = new File(DataSet.ROOT, aData.fPattern);
     String displayName = String.format("%s:%d-%d", file.getParent(), aFirstYear, aLastYear);
     return new MonthlyWeatherModel(
@@ -42,7 +42,7 @@ public class WeatherModelFactory {
     );
   }
 
-  public TimeBaseModel createDailyStationModel() throws IOException {
+  public TimeBasedModel createDailyStationModel() throws IOException {
 
     return null;
   }

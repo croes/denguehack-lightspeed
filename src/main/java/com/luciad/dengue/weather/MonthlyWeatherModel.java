@@ -11,7 +11,7 @@ import com.luciad.util.iso19103.ILcdISO19103UnitOfMeasure;
 import com.luciad.dengue.util.DateUtils;
 import com.luciad.dengue.util.HasAImage;
 import com.luciad.dengue.util.LRUCache;
-import com.luciad.dengue.util.TimeBaseModel;
+import com.luciad.dengue.util.TimeBasedModel;
 
 import java.io.IOException;
 import java.time.ZonedDateTime;
@@ -24,7 +24,7 @@ import static com.luciad.dengue.util.DateUtils.eachMonthBetweenYears;
 /**
  * @author Thomas De Bodt
  */
-class MonthlyWeatherModel extends TLcdVectorModel implements TimeBaseModel {
+class MonthlyWeatherModel extends TLcdVectorModel implements TimeBasedModel {
   private final String fPattern;
   private final ILcdModelDecoder fDelegate = new TLcdArcInfoASCIIGridModelDecoder();
   private final long[] fTimeInstances;

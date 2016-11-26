@@ -5,7 +5,7 @@ import com.luciad.model.ILcdModel;
 /**
  * @author Thomas De Bodt
  */
-public interface TimeBaseModel extends ILcdModel {
+public interface TimeBasedModel extends ILcdModel {
 
   void setTime(long aTime);
 
