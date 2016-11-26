@@ -6,5 +6,6 @@ import java.io.File;
  * @author Thomas De Bodt
  */
 public class DataSet {
-  public static final File ROOT = new File("C:/Dengue/Data");
+//  public static final File ROOT = new File("C:/Dengue/Data");
+  public static final File ROOT = new File("/home/luciad/Data");
 }

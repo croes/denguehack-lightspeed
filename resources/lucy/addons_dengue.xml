@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<addonConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:noNamespaceSchemaLocation="resources/lucy/addons.xsd">
+  <addons>
+    <include>samples/frontend/mapcentric/map_centric_addons.xml</include>
+    <!--<addon>-->
+      <!--<priority>data_consumer</priority>-->
+      <!--<name>Lightspeed map</name>-->
+      <!--<class>com.luciad.lucy.addons.lspmap.TLcyLspMapAddOn</class>-->
+      <!--<configFile>samples/lightspeed/oculus/Oculus_TLcyLspMapAddOn.cfg</configFile>-->
+      <!--&lt;!&ndash;Don't check for the Lightspeed option, you should get an explicit license error-->
+       <!--when using this addon in LuciadLightspeed LM &ndash;&gt;-->
+    <!--</addon>-->
+    <addon>
+      <name>Dengue</name>
+      <class>com.luciad.dengue.lucy.DengueAddOn</class>
+      <configFile>lucy/DengueAddOn.cfg</configFile>
+      <!--<luciadMapOptions>Lightspeed</luciadMapOptions>-->
+    </addon>
+  </addons>
+</addonConfiguration>
