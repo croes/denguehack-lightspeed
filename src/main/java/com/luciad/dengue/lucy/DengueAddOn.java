@@ -4,14 +4,12 @@ import com.luciad.contour.TLcdComplexPolygonContourFinder;
 import com.luciad.contour.TLcdIntervalContour;
 import com.luciad.contour.TLcdLonLatComplexPolygonContourBuilder;
 import com.luciad.contour.TLcdValuedContour;
+import com.luciad.dengue.util.DateUtils;
+import com.luciad.dengue.util.RasterStyler;
+import com.luciad.dengue.util.TimeBasedModel;
 import com.luciad.dengue.view.DengueFilter;
-import com.luciad.dengue.weather.DailyWeatherReport;
-import com.luciad.dengue.weather.StationDailyWeatherDecoder;
-import com.luciad.dengue.weather.WeatherDomainObject;
-import com.luciad.dengue.weather.WeatherStation;
+import com.luciad.dengue.weather.*;
 import com.luciad.format.geojson.TLcdGeoJsonModelDecoder;
-import com.luciad.format.raster.ILcdRaster;
-import com.luciad.format.raster.TLcdArcInfoASCIIGridModelDecoder;
 import com.luciad.lucy.ILcyLucyEnv;
 import com.luciad.lucy.ILcyLucyEnvListener;
 import com.luciad.lucy.TLcyLucyEnvEvent;
@@ -27,20 +25,21 @@ import com.luciad.model.TLcd2DBoundsIndexedModel;
 import com.luciad.model.TLcdModelDescriptor;
 import com.luciad.model.TLcdVectorModel;
 import com.luciad.reference.TLcdGeodeticReference;
-import com.luciad.shape.ILcdMatrixView;
 import com.luciad.shape.ILcdShape;
-import com.luciad.util.ILcdChangeListener;
 import com.luciad.util.ILcdFunction;
-import com.luciad.util.TLcdChangeEvent;
+import com.luciad.util.TLcdColorMap;
+import com.luciad.util.TLcdInterval;
 import com.luciad.view.lightspeed.ILspView;
 import com.luciad.view.lightspeed.layer.ILspInteractivePaintableLayer;
 import com.luciad.view.lightspeed.layer.ILspLayer;
+import com.luciad.view.lightspeed.layer.TLspPaintRepresentationState;
 import com.luciad.view.lightspeed.layer.TLspPaintState;
 import com.luciad.view.lightspeed.layer.raster.TLspRasterLayerBuilder;
 import com.luciad.view.lightspeed.layer.shape.TLspShapeLayerBuilder;
 import samples.gxy.contour.ContourLevels;
-import samples.gxy.contour.RasterMatrixView;
+import samples.lightspeed.timeview.TimeSlider;
 
+import java.awt.*;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +53,7 @@ public class DengueAddOn extends ALcyPreferencesAddOn {
 
   public DengueAddOn() {
     super(ALcyTool.getLongPrefixWithClassName(DengueAddOn.class),
-      ALcyTool.getShortPrefix(DengueAddOn.class));
+          ALcyTool.getShortPrefix(DengueAddOn.class));
   }
 
   @Override
@@ -82,12 +81,21 @@ public class DengueAddOn extends ALcyPreferencesAddOn {
   private void loadData(ILspView aView) throws IOException {
     //Weather
     System.out.println("Loading weather data");
-    ILcdModel model = new TLcdArcInfoASCIIGridModelDecoder().decode("data/weather/pre/cru_ts_3_10_01.1901.2009.pre_1901_1.asc");
-    ILspLayer layer = TLspRasterLayerBuilder
-      .newBuilder()
-      .model(model)
-      .build();
-    aView.addLayer(layer);
+    addWeatherData(new WeatherModelFactory(), WeatherModelFactory.PRECIPITATION,
+                   new double[]{
+                       Short.MIN_VALUE,
+                       0.0,
+                       1000.0,
+                       Short.MAX_VALUE
+                   },
+                   new Color[]{
+                       new Color(0, true),
+                       new Color(0, true),
+                       new Color(0, 13, 52, 128),
+                       new Color(0, true),
+                       },
+                   aView,
+                   timeViewPanelTool.getTimeSlider());
 
       //Contours
     TLcd2DBoundsIndexedModel contourModel = new TLcd2DBoundsIndexedModel();
@@ -132,10 +140,10 @@ public class DengueAddOn extends ALcyPreferencesAddOn {
       }
     });
 
-    Object element = model.elements().nextElement();
-
-    if (element instanceof ILcdRaster) {
-      ILcdRaster raster = (ILcdRaster) element;
+    // Contours for weather..
+    /*Object element = weatherModel.elements().nextElement();
+    if(element instanceof ILcdRaster) {
+      ILcdRaster raster = (ILcdRaster)element;
 
       ILcdMatrixView matrixView = new RasterMatrixView(raster, raster.getBounds());
 
@@ -144,7 +152,7 @@ public class DengueAddOn extends ALcyPreferencesAddOn {
       TLcdComplexPolygonContourFinder.IntervalMode mode = TLcdComplexPolygonContourFinder.IntervalMode.INTERVAL;
 
       contourFinder.findContours(contourBuilder, matrixView, mode, levelValues, specialValues);
-    }
+    }*/
 
     //Dengue Malaysia
     TLcdGeoJsonModelDecoder modelDecoder = new TLcdGeoJsonModelDecoder();
@@ -165,6 +173,34 @@ public class DengueAddOn extends ALcyPreferencesAddOn {
     timeViewPanelTool.getTimeSlider().addChangeListener(tLcdChangeEvent -> weatherStationStyler.setTime(timeViewPanelTool.getTimeSlider().getTime()));
     ILspInteractivePaintableLayer weatherStationLayer = TLspShapeLayerBuilder.newBuilder().model(dailyWeatherModel).bodyStyler(TLspPaintState.REGULAR, weatherStationStyler).build();
     aView.addLayer(weatherStationLayer);
+  }
+
+  private TimeBasedModel addWeatherData(WeatherModelFactory aWeatherModelFactory, WeatherModelFactory.MonthlyData aData,
+                                        double[] aLevels, Color[] aColors,
+                                        ILspView aView, TimeSlider aTimeSlider) throws IOException {
+    int FIRST_YEAR = 2005;
+    int LAST_YEAR = 2009;
+    TimeBasedModel model = aWeatherModelFactory.createMonthlyModel(
+        aData, FIRST_YEAR, LAST_YEAR
+    );
+    aView.addLayer(
+        TLspRasterLayerBuilder
+            .newBuilder()
+            .model(model)
+            .styler(
+                TLspPaintRepresentationState.REGULAR_BODY,
+                new RasterStyler(new TLcdColorMap(new TLcdInterval(Short.MIN_VALUE, Short.MAX_VALUE), aLevels, aColors))
+            )
+            .build()
+    );
+
+    EventQueue.invokeLater(() -> {
+      aTimeSlider.addChangeListener(e -> model.setTime(aTimeSlider.getTime()));
+      aTimeSlider.setValidRange(DateUtils.date(FIRST_YEAR, 1).toEpochSecond() * 1000,
+                                DateUtils.date(LAST_YEAR, 12).toEpochSecond() * 1000,
+                                0, 1000);
+    });
+    return model;
   }
 
   @Override

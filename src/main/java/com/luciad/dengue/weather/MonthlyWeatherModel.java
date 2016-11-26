@@ -1,5 +1,9 @@
 package com.luciad.dengue.weather;
 
+import com.luciad.dengue.util.DateUtils;
+import com.luciad.dengue.util.HasAImage;
+import com.luciad.dengue.util.LRUCache;
+import com.luciad.dengue.util.TimeBasedModel;
 import com.luciad.format.raster.TLcdArcInfoASCIIGridModelDecoder;
 import com.luciad.imaging.ALcdBandMeasurementSemantics;
 import com.luciad.imaging.ALcdImage;
@@ -8,10 +12,6 @@ import com.luciad.imaging.operator.TLcdSemanticsOp;
 import com.luciad.model.*;
 import com.luciad.util.concurrent.TLcdLockUtil;
 import com.luciad.util.iso19103.ILcdISO19103UnitOfMeasure;
-import com.luciad.dengue.util.DateUtils;
-import com.luciad.dengue.util.HasAImage;
-import com.luciad.dengue.util.LRUCache;
-import com.luciad.dengue.util.TimeBasedModel;
 
 import java.io.IOException;
 import java.time.ZonedDateTime;
@@ -52,24 +52,26 @@ class MonthlyWeatherModel extends TLcdVectorModel implements TimeBasedModel {
   @Override
   public void setTime(long aTime) {
     // Find out the change
-    int instanceIdx;
+    long newDataTime;
     try(TLcdLockUtil.Lock lock = TLcdLockUtil.writeLock(this)) {
-      instanceIdx = Arrays.binarySearch(fTimeInstances, aTime);
+      int instanceIdx = Arrays.binarySearch(fTimeInstances, aTime);
       if(instanceIdx < 0) instanceIdx = ~instanceIdx;
-      instanceIdx = Math.max(0, Math.min(fTimeInstances.length - 1, instanceIdx));
-      if(fTimeInstances[instanceIdx] == fDataTime) {
+      newDataTime =
+          aTime < fTimeInstances[0] || aTime > fTimeInstances[fTimeInstances.length - 1] ? -1 :
+          fTimeInstances[Math.max(0, Math.min(fTimeInstances.length - 1, instanceIdx))];
+      if(newDataTime == fDataTime) {
         // no change
         fTime = aTime;
         return;
       }
     }
     // Load data
-    ALcdImage newImage = getImage(fTimeInstances[instanceIdx]);
+    ALcdImage newImage = newDataTime >= 0 ? getImage(newDataTime) : null;
     // Update model
     try(TLcdLockUtil.Lock lock = TLcdLockUtil.writeLock(this)) {
       fTime = aTime;
-      if(fTimeInstances[instanceIdx] != fDataTime) {
-        fDataTime = fTimeInstances[instanceIdx];
+      if(newDataTime != fDataTime) {
+        fDataTime = newDataTime;
         fHasAImage.setImage(newImage);
         elementChanged(fHasAImage, FIRE_LATER);
       }
