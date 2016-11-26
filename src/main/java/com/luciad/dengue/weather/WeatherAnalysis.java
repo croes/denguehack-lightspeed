@@ -49,19 +49,17 @@ public class WeatherAnalysis extends LightspeedSample {
         WeatherModelFactory.PRECIPITATION,
         new double[]{
             Short.MIN_VALUE,
-            99,
+            0,
             100,
-            200,
-            201,
+            1000,
             Short.MAX_VALUE
         },
         new Color[]{
-            new Color(0, true),
-            new Color(0, true),
-            new Color(0xFF),
-            new Color(0xFF),
-            new Color(0, true),
-            new Color(0, true),
+            new Color(0xFDFBFF),
+            new Color(0x80FF7F),
+            new Color(0x72FFF2),
+            new Color(0x8198FF),
+            new Color(0xFDFBFF)
         }
     );
 
@@ -71,19 +69,19 @@ public class WeatherAnalysis extends LightspeedSample {
         WeatherModelFactory.MEAN_TEMPERATURE,
         new double[]{
             Short.MIN_VALUE,
-            19,
-            20,
+            -20,
+            10,
             40,
-            41,
+            100,
             Short.MAX_VALUE
         },
         new Color[]{
-            new Color(0, true),
-            new Color(0, true),
-            new Color(0x00FF00),
-            new Color(0x00FF00),
-            new Color(0, true),
-            new Color(0, true),
+            new Color(0xFDFBFF),
+            new Color(0x629751),
+            new Color(0xFF8000),
+            new Color(0xFF6464),
+            new Color(0xFFF73B),
+            new Color(0xFDFBFF)
         }
     );
   }

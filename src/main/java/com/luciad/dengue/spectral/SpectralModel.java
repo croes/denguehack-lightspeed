@@ -35,8 +35,8 @@ import java.util.stream.Stream;
  */
 public class SpectralModel extends TLcdVectorModel {
 
-  private final TLcdInterval fPrecipitationInterval = new TLcdInterval(100, 200);
-  private final TLcdInterval fTemperatureInterval = new TLcdInterval(20, 40);
+  private final TLcdInterval fPrecipitationInterval = new TLcdInterval(400, 1000);
+  private final TLcdInterval fTemperatureInterval = new TLcdInterval(100, 1000);
 
   private final HasAImage fHasAImage;
 
