@@ -188,9 +188,9 @@ public class DengueAddOn extends ALcyPreferencesAddOn {
     long timeOffset = TimeUnit.DAYS.toMillis(356 * (2016 - 2009)); // fudge data from 2009 to 2016
     EventQueue.invokeLater(() -> {
       aTimeSlider.addChangeListener(e -> model.setTime(aTimeSlider.getTime() - timeOffset));
-      aTimeSlider.setValidRange(DateUtils.date(FIRST_YEAR, 1).toEpochSecond() * 1000,
-                                DateUtils.date(LAST_YEAR, 12).toEpochSecond() * 1000,
-                                0, 1000);
+//      aTimeSlider.setValidRange(DateUtils.date(FIRST_YEAR, 1).toEpochSecond() * 1000,
+//                                DateUtils.date(LAST_YEAR, 12).toEpochSecond() * 1000,
+//                                0, 1000);
     });
     return model;
   }
