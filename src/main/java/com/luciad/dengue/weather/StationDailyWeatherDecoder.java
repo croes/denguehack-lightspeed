@@ -180,6 +180,14 @@ public class StationDailyWeatherDecoder implements ILcdInputStreamFactoryCapable
   }
 
   public static void main(String[] args) throws Exception {
+    Map<WeatherStation, List<DailyWeatherReport>> reportsByStation = new StationDailyWeatherDecoder().decodeWeather();
+
+    System.out.printf("Stations:%n");
+    System.out.printf("  %d stations%n", reportsByStation.size());
+    System.out.printf("  %.1f reports/station%n", reportsByStation.values().stream().mapToInt(List::size).average().orElse(Double.NaN));
+  }
+
+  public Map<WeatherStation, List<DailyWeatherReport>> decodeWeather() throws IOException {
     StationDailyWeatherDecoder md = new StationDailyWeatherDecoder();
     List<WeatherStation> stations = md
         .decodeStations(new File(DataSet.ROOT, "asia_daily_summaries/data/weatherstationsXY.csv").getPath()).stream()
@@ -195,11 +203,6 @@ public class StationDailyWeatherDecoder implements ILcdInputStreamFactoryCapable
     System.out.printf("Reports:%n");
     System.out.printf("  %d reports%n", numReports);
 
-    Map<WeatherStation, List<DailyWeatherReport>> reportsByStation =
-        reports.stream().collect(Collectors.groupingBy(r -> r.station));
-
-    System.out.printf("Stations:%n");
-    System.out.printf("  %d stations%n", reportsByStation.size());
-    System.out.printf("  %.1f reports/station%n", reportsByStation.values().stream().mapToInt(List::size).average().orElse(Double.NaN));
+    return reports.stream().collect(Collectors.groupingBy(r -> r.station));
   }
 }

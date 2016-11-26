@@ -1,16 +1,14 @@
 package com.luciad.dengue.weather;
 
+import com.luciad.dengue.util.DateUtils;
+import com.luciad.dengue.util.RasterStyler;
+import com.luciad.dengue.util.TimeBasedModel;
 import com.luciad.util.TLcdColorMap;
 import com.luciad.util.TLcdInterval;
 import com.luciad.view.lightspeed.layer.TLspPaintRepresentationState;
 import com.luciad.view.lightspeed.layer.raster.TLspRasterLayerBuilder;
-import com.luciad.view.lightspeed.style.ALspStyle;
-import com.luciad.view.lightspeed.style.TLspRasterStyle;
-import com.luciad.view.lightspeed.style.styler.TLspStyler;
 import samples.lightspeed.common.LightspeedSample;
 import samples.lightspeed.timeview.TimeSlider;
-import com.luciad.dengue.util.DateUtils;
-import com.luciad.dengue.util.TimeBaseModel;
 
 import java.awt.*;
 import java.io.IOException;
@@ -26,7 +24,10 @@ public class WeatherAnalysis extends LightspeedSample {
 
   private static final int FIRST_YEAR = 2000;
   private static final int LAST_YEAR = 2005;
-  private TimeSlider fTimeSlider;
+  protected TimeSlider fTimeSlider;
+
+  protected TimeBasedModel fPrecipitationModel;
+  protected TimeBasedModel fTemperatureModel;
 
   @Override
   protected void createGUI() {
@@ -43,48 +44,52 @@ public class WeatherAnalysis extends LightspeedSample {
     WeatherModelFactory weatherModelFactory = new WeatherModelFactory();
 
     // Precipitation
-    addWeatherData(
+    fPrecipitationModel = addWeatherData(
         weatherModelFactory,
         WeatherModelFactory.PRECIPITATION,
         new double[]{
             Short.MIN_VALUE,
-            0,
+            99,
             100,
-            1000,
+            200,
+            201,
             Short.MAX_VALUE
         },
         new Color[]{
-            new Color(0xFDFBFF),
-            new Color(0x629751),
-            new Color(0xFF8000),
-            new Color(0xFF6464),
-            new Color(0xFDFBFF)
+            new Color(0, true),
+            new Color(0, true),
+            new Color(0xFF),
+            new Color(0xFF),
+            new Color(0, true),
+            new Color(0, true),
         }
     );
 
     // Temperature
-    addWeatherData(
+    fTemperatureModel = addWeatherData(
         weatherModelFactory,
         WeatherModelFactory.MEAN_TEMPERATURE,
         new double[]{
             Short.MIN_VALUE,
-            -20,
-            10,
+            19,
+            20,
             40,
+            41,
             Short.MAX_VALUE
         },
         new Color[]{
-            new Color(0xFDFBFF),
-            new Color(0x6AB3FF),
-            new Color(0xFFCE58),
-            new Color(0xFF4545),
-            new Color(0xFDFBFF)
+            new Color(0, true),
+            new Color(0, true),
+            new Color(0x00FF00),
+            new Color(0x00FF00),
+            new Color(0, true),
+            new Color(0, true),
         }
     );
   }
 
-  private void addWeatherData(WeatherModelFactory aWeatherModelFactory, WeatherModelFactory.MonthlyData aData, double[] aLevels, Color[] aColors) throws IOException {
-    TimeBaseModel model = aWeatherModelFactory.createMonthlyModel(
+  private TimeBasedModel addWeatherData(WeatherModelFactory aWeatherModelFactory, WeatherModelFactory.MonthlyData aData, double[] aLevels, Color[] aColors) throws IOException {
+    TimeBasedModel model = aWeatherModelFactory.createMonthlyModel(
         aData, FIRST_YEAR, LAST_YEAR
     );
     getView().addLayer(
@@ -93,13 +98,7 @@ public class WeatherAnalysis extends LightspeedSample {
             .model(model)
             .styler(
                 TLspPaintRepresentationState.REGULAR_BODY,
-                new TLspStyler(
-                    (ALspStyle)TLspRasterStyle
-                        .newBuilder()
-                        .startResolutionFactor(Double.POSITIVE_INFINITY)
-                        .colorMap(new TLcdColorMap(new TLcdInterval(Short.MIN_VALUE, Short.MAX_VALUE), aLevels, aColors))
-                        .build()
-                )
+                new RasterStyler(new TLcdColorMap(new TLcdInterval(Short.MIN_VALUE, Short.MAX_VALUE), aLevels, aColors))
             )
             .build()
     );
@@ -110,6 +109,7 @@ public class WeatherAnalysis extends LightspeedSample {
                                 DateUtils.date(LAST_YEAR, 12).toEpochSecond() * 1000,
                                 0, 1000);
     });
+    return model;
   }
 
   public static void main(String[] args) {

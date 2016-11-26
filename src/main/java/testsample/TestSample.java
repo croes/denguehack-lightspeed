@@ -1,13 +1,26 @@
 package testsample;
 
 import com.luciad.datamodel.ILcdDataObject;
+import com.luciad.dengue.weather.DailyWeatherReport;
+import com.luciad.dengue.weather.StationDailyWeatherDecoder;
+import com.luciad.dengue.weather.WeatherStation;
 import com.luciad.format.geojson.TLcdGeoJsonModelDecoder;
+import com.luciad.geodesy.ILcdEllipsoid;
 import com.luciad.model.ILcdModel;
+import com.luciad.model.TLcdModelDescriptor;
+import com.luciad.model.TLcdVectorModel;
+import com.luciad.reference.ILcdGeoReference;
+import com.luciad.reference.TLcdGeodeticReference;
+import com.luciad.shape.ILcdPoint;
+import com.luciad.shape.shape2D.TLcdLonLatCircle;
+import com.luciad.shape.shape2D.TLcdLonLatPoint;
 import com.luciad.view.lightspeed.TLspContext;
 import com.luciad.view.lightspeed.layer.ILspInteractivePaintableLayer;
 import com.luciad.view.lightspeed.layer.TLspPaintState;
 import com.luciad.view.lightspeed.layer.shape.TLspShapeLayerBuilder;
 import com.luciad.view.lightspeed.style.TLspFillStyle;
+import com.luciad.view.lightspeed.style.TLspIconStyle;
+import com.luciad.view.lightspeed.style.TLspLineStyle;
 import com.luciad.view.lightspeed.style.styler.ALspStyleCollector;
 import com.luciad.view.lightspeed.style.styler.ALspStyler;
 import samples.lightspeed.common.LightspeedSample;
@@ -34,16 +47,48 @@ public class TestSample extends LightspeedSample {
         ILspInteractivePaintableLayer layer = TLspShapeLayerBuilder.newBuilder().model(malasya).bodyStyler(TLspPaintState.REGULAR, malasyastyler).build();
         getView().addLayer(layer);
 
+
+        //Station
+        Map<WeatherStation, List<DailyWeatherReport>> weatherStationListMap = new StationDailyWeatherDecoder().decodeWeather();
+        TLcdVectorModel dailyWeatherModel = new TLcdVectorModel(new TLcdGeodeticReference(), new TLcdModelDescriptor());
+        for (Map.Entry<WeatherStation, List<DailyWeatherReport>> entry : weatherStationListMap.entrySet()) {
+            dailyWeatherModel.addElement(new WeatherDomainObject(entry.getKey(), entry.getValue()), ILcdModel.NO_EVENT);
+        }
+        WeatherStationStyler weatherStationStyler = new WeatherStationStyler();
+        ILspInteractivePaintableLayer weatherStationLayer = TLspShapeLayerBuilder.newBuilder().model(dailyWeatherModel).bodyStyler(TLspPaintState.REGULAR, weatherStationStyler).build();
+        getView().addLayer(weatherStationLayer);
+
+        //Time update
         new Timer().scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 malasyastyler.setTime(malasyastyler.getTime() + (1000 * 60 * 60 * 24));
+                weatherStationStyler.setTime(weatherStationStyler.getTime() + (1000 * 60 * 60 * 24));
             }
-        }, 0, 50);
+        }, 0, 200);
     }
 
     public static void main(String[] args) {
         LightspeedSample.startSample(TestSample.class, "test sample");
+    }
+
+    private static class WeatherDomainObject {
+        private WeatherStation weatherStation;
+        private List<DailyWeatherReport> weatherReports;
+
+        public WeatherDomainObject(WeatherStation weatherStation, List<DailyWeatherReport> weatherReports) {
+            this.weatherStation = weatherStation;
+            this.weatherReports = weatherReports;
+            this.weatherReports.sort(Comparator.comparing(DailyWeatherReport::getYearmoda));
+        }
+
+        public WeatherStation getWeatherStation() {
+            return weatherStation;
+        }
+
+        public List<DailyWeatherReport> getWeatherReports() {
+            return weatherReports;
+        }
     }
 
     private static class MalasyiaStyler extends ALspStyler {
@@ -55,7 +100,6 @@ public class TestSample extends LightspeedSample {
         }
 
         public void setTime(long time) {
-            System.out.println(time);
             this.time = time;
             fireStyleChangeEvent();
         }
@@ -91,6 +135,43 @@ public class TestSample extends LightspeedSample {
                     color = new Color(177, 0, 38, 192);
                 }
                 styleCollector.object(o).style(TLspFillStyle.newBuilder().color(color).build()).submit();
+            }
+        }
+    }
+
+    private static class WeatherStationStyler extends ALspStyler {
+
+        private long time = 1357167600000l;
+
+        public long getTime() {
+            return time;
+        }
+
+        public void setTime(long time) {
+            this.time = time;
+            fireStyleChangeEvent();
+        }
+
+        @Override
+        public void style(Collection<?> collection, ALspStyleCollector styleCollector, TLspContext tLspContext) {
+            ILcdEllipsoid ellipsoid = ((ILcdGeoReference) tLspContext.getModelReference()).getGeodeticDatum().getEllipsoid();
+            for (Object o : collection) {
+                if (o instanceof WeatherDomainObject) {
+                    double value = Double.NaN;
+                    double factor = 20000;
+                    List<DailyWeatherReport> weatherReports = ((WeatherDomainObject) o).getWeatherReports();
+                    for (DailyWeatherReport weatherReport : weatherReports) {
+                        if (weatherReport.getYearmoda() > time) {
+                            value = weatherReport.getPrcp();
+                            break;
+                        }
+                    }
+
+                    ILcdPoint centerPoint = ((WeatherDomainObject) o).getWeatherStation().getLocation();
+                    if (!Double.isNaN(value)) {
+                        styleCollector.object(o).geometry(new TLcdLonLatCircle(centerPoint, value * factor, ellipsoid)).style(TLspLineStyle.newBuilder().color(Color.BLUE).build()).submit();
+                    }
+                }
             }
         }
     }
