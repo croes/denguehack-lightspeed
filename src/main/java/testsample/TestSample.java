@@ -3,6 +3,7 @@ package testsample;
 import com.luciad.datamodel.ILcdDataObject;
 import com.luciad.dengue.weather.DailyWeatherReport;
 import com.luciad.dengue.weather.StationDailyWeatherDecoder;
+import com.luciad.dengue.weather.WeatherDomainObject;
 import com.luciad.dengue.weather.WeatherStation;
 import com.luciad.format.geojson.TLcdGeoJsonModelDecoder;
 import com.luciad.geodesy.ILcdEllipsoid;
@@ -13,19 +14,16 @@ import com.luciad.reference.ILcdGeoReference;
 import com.luciad.reference.TLcdGeodeticReference;
 import com.luciad.shape.ILcdPoint;
 import com.luciad.shape.shape2D.TLcdLonLatCircle;
-import com.luciad.shape.shape2D.TLcdLonLatPoint;
 import com.luciad.view.lightspeed.TLspContext;
 import com.luciad.view.lightspeed.layer.ILspInteractivePaintableLayer;
 import com.luciad.view.lightspeed.layer.TLspPaintState;
 import com.luciad.view.lightspeed.layer.shape.TLspShapeLayerBuilder;
 import com.luciad.view.lightspeed.style.TLspFillStyle;
-import com.luciad.view.lightspeed.style.TLspIconStyle;
 import com.luciad.view.lightspeed.style.TLspLineStyle;
 import com.luciad.view.lightspeed.style.styler.ALspStyleCollector;
 import com.luciad.view.lightspeed.style.styler.ALspStyler;
 import samples.lightspeed.common.LightspeedSample;
 import samples.lightspeed.common.LspDataUtil;
-import samples.lightspeed.imaging.multispectral.general.GeneralOperationPanel;
 
 import java.awt.*;
 import java.io.IOException;
@@ -70,25 +68,6 @@ public class TestSample extends LightspeedSample {
 
     public static void main(String[] args) {
         LightspeedSample.startSample(TestSample.class, "test sample");
-    }
-
-    private static class WeatherDomainObject {
-        private WeatherStation weatherStation;
-        private List<DailyWeatherReport> weatherReports;
-
-        public WeatherDomainObject(WeatherStation weatherStation, List<DailyWeatherReport> weatherReports) {
-            this.weatherStation = weatherStation;
-            this.weatherReports = weatherReports;
-            this.weatherReports.sort(Comparator.comparing(DailyWeatherReport::getYearmoda));
-        }
-
-        public WeatherStation getWeatherStation() {
-            return weatherStation;
-        }
-
-        public List<DailyWeatherReport> getWeatherReports() {
-            return weatherReports;
-        }
     }
 
     private static class MalasyiaStyler extends ALspStyler {

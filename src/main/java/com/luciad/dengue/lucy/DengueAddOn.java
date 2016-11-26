@@ -5,11 +5,13 @@ import com.luciad.contour.TLcdIntervalContour;
 import com.luciad.contour.TLcdLonLatComplexPolygonContourBuilder;
 import com.luciad.contour.TLcdValuedContour;
 import com.luciad.dengue.view.DengueFilter;
+import com.luciad.dengue.weather.DailyWeatherReport;
+import com.luciad.dengue.weather.StationDailyWeatherDecoder;
+import com.luciad.dengue.weather.WeatherDomainObject;
+import com.luciad.dengue.weather.WeatherStation;
+import com.luciad.format.geojson.TLcdGeoJsonModelDecoder;
 import com.luciad.format.raster.ILcdRaster;
 import com.luciad.format.raster.TLcdArcInfoASCIIGridModelDecoder;
-import com.luciad.gui.TLcdImageIcon;
-import com.luciad.gui.swing.TLcdOverlayLayout;
-import com.luciad.gui.swing.TLcdSWIcon;
 import com.luciad.lucy.ILcyLucyEnv;
 import com.luciad.lucy.ILcyLucyEnvListener;
 import com.luciad.lucy.TLcyLucyEnvEvent;
@@ -23,23 +25,23 @@ import com.luciad.lucy.util.TLcyVetoException;
 import com.luciad.model.ILcdModel;
 import com.luciad.model.TLcd2DBoundsIndexedModel;
 import com.luciad.model.TLcdModelDescriptor;
+import com.luciad.model.TLcdVectorModel;
 import com.luciad.reference.TLcdGeodeticReference;
 import com.luciad.shape.ILcdMatrixView;
 import com.luciad.shape.ILcdShape;
 import com.luciad.util.ILcdFunction;
-import com.luciad.util.TLcdInterval;
-import com.luciad.view.lightspeed.ILspAWTView;
 import com.luciad.view.lightspeed.ILspView;
-import com.luciad.view.lightspeed.layer.ILspEditableStyledLayer;
 import com.luciad.view.lightspeed.layer.ILspInteractivePaintableLayer;
 import com.luciad.view.lightspeed.layer.ILspLayer;
+import com.luciad.view.lightspeed.layer.TLspPaintState;
 import com.luciad.view.lightspeed.layer.raster.TLspRasterLayerBuilder;
 import com.luciad.view.lightspeed.layer.shape.TLspShapeLayerBuilder;
 import samples.gxy.contour.ContourLevels;
 import samples.gxy.contour.RasterMatrixView;
 
-import javax.swing.*;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by tomc on 25/11/2016.
@@ -76,6 +78,7 @@ public class DengueAddOn extends ALcyPreferencesAddOn {
   }
 
   private void loadData(ILspView aView) throws IOException {
+    //Weather
     System.out.println("Loading weather data");
     ILcdModel model = new TLcdArcInfoASCIIGridModelDecoder().decode("data/weather/pre/cru_ts_3_10_01.1901.2009.pre_1901_1.asc");
     ILspLayer layer = TLspRasterLayerBuilder
@@ -84,6 +87,7 @@ public class DengueAddOn extends ALcyPreferencesAddOn {
       .build();
     aView.addLayer(layer);
 
+      //Contours
     TLcd2DBoundsIndexedModel contourModel = new TLcd2DBoundsIndexedModel();
     contourModel.setModelDescriptor(new TLcdModelDescriptor("Contour", "Contour", "Contour"));
     contourModel.setModelReference(new TLcdGeodeticReference());
@@ -139,6 +143,24 @@ public class DengueAddOn extends ALcyPreferencesAddOn {
 
       contourFinder.findContours(contourBuilder, matrixView, mode, levelValues, specialValues);
     }
+
+      //Dengue Malaysia
+      TLcdGeoJsonModelDecoder modelDecoder = new TLcdGeoJsonModelDecoder();
+      ILcdModel malasya = modelDecoder.decode("malasia_cleaned.geojson");
+
+      MalaysiaDengueStyler malasyastyler = new MalaysiaDengueStyler();
+      ILspInteractivePaintableLayer dengueLayer = TLspShapeLayerBuilder.newBuilder().model(malasya).bodyStyler(TLspPaintState.REGULAR, malasyastyler).build();
+      aView.addLayer(dengueLayer);
+
+      //Daily weather stations
+      Map<WeatherStation, List<DailyWeatherReport>> weatherStationListMap = new StationDailyWeatherDecoder().decodeWeather();
+      TLcdVectorModel dailyWeatherModel = new TLcdVectorModel(new TLcdGeodeticReference(), new TLcdModelDescriptor());
+      for (Map.Entry<WeatherStation, List<DailyWeatherReport>> entry : weatherStationListMap.entrySet()) {
+          dailyWeatherModel.addElement(new WeatherDomainObject(entry.getKey(), entry.getValue()), ILcdModel.NO_EVENT);
+      }
+      WeatherStationStyler weatherStationStyler = new WeatherStationStyler();
+      ILspInteractivePaintableLayer weatherStationLayer = TLspShapeLayerBuilder.newBuilder().model(dailyWeatherModel).bodyStyler(TLspPaintState.REGULAR, weatherStationStyler).build();
+      aView.addLayer(weatherStationLayer);
   }
 
   @Override

@@ -133,4 +133,37 @@ public class DailyWeatherReport implements ILcdBounded {
   public ILcdBounds getBounds() {
     return station == null ? UNDEFINED_BOUNDS : station.getBounds();
   }
+
+  public double get(String keyToGet) {
+    switch (keyToGet){
+      case "temp":
+        return getTemp();
+      case "dewp":
+        return getDewp();
+      case "slp":
+        return getSlp();
+      case "stp":
+        return getStp();
+      case "visib":
+        return getVisib();
+      case "wdsp":
+        return getWdsp();
+      case "mxspd":
+        return getMxspd();
+      case "gust":
+        return getGust();
+      case "max":
+        return getMax();
+      case "min":
+        return getMin();
+      case "prcp":
+        return getPrcp();
+      case "sndp":
+        return getSndp();
+      case "frshtt":
+        return getFrshtt();
+      default:
+        throw new IllegalArgumentException("No valid argument: "+keyToGet);
+    }
+  }
 }
