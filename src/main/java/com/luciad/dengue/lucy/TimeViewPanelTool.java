@@ -1,5 +1,6 @@
 package com.luciad.dengue.lucy;
 
+import com.luciad.dengue.util.DateUtils;
 import com.luciad.lucy.gui.ALcyApplicationPaneTool;
 import com.luciad.lucy.util.properties.ALcyProperties;
 
@@ -22,9 +23,14 @@ public class TimeViewPanelTool extends ALcyApplicationPaneTool {
     super(aProperties, aLongPrefix + "time.", aShortPrefix + "time.");
 
     timeSlider = new TimeSlider();
+    timeSlider.setValidRange(DateUtils.dateToMillis(DateUtils.date(2005,1)),DateUtils.dateToMillis(DateUtils.date(2016,1)),0, 200);
     viewPanel = new JPanel();
     viewPanel.setLayout(new BoxLayout(viewPanel,BoxLayout.X_AXIS ));
     viewPanel.add(timeSlider);
+  }
+
+  public TimeSlider getTimeSlider() {
+    return timeSlider;
   }
 
   @Override

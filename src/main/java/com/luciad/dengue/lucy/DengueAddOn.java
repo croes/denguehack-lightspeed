@@ -29,7 +29,9 @@ import com.luciad.model.TLcdVectorModel;
 import com.luciad.reference.TLcdGeodeticReference;
 import com.luciad.shape.ILcdMatrixView;
 import com.luciad.shape.ILcdShape;
+import com.luciad.util.ILcdChangeListener;
 import com.luciad.util.ILcdFunction;
+import com.luciad.util.TLcdChangeEvent;
 import com.luciad.view.lightspeed.ILspView;
 import com.luciad.view.lightspeed.layer.ILspInteractivePaintableLayer;
 import com.luciad.view.lightspeed.layer.ILspLayer;
@@ -144,23 +146,25 @@ public class DengueAddOn extends ALcyPreferencesAddOn {
       contourFinder.findContours(contourBuilder, matrixView, mode, levelValues, specialValues);
     }
 
-      //Dengue Malaysia
-      TLcdGeoJsonModelDecoder modelDecoder = new TLcdGeoJsonModelDecoder();
-      ILcdModel malasya = modelDecoder.decode("malasia_cleaned.geojson");
+    //Dengue Malaysia
+    TLcdGeoJsonModelDecoder modelDecoder = new TLcdGeoJsonModelDecoder();
+    ILcdModel malasya = modelDecoder.decode("malasia_cleaned.geojson");
 
-      MalaysiaDengueStyler malasyastyler = new MalaysiaDengueStyler();
-      ILspInteractivePaintableLayer dengueLayer = TLspShapeLayerBuilder.newBuilder().model(malasya).bodyStyler(TLspPaintState.REGULAR, malasyastyler).build();
-      aView.addLayer(dengueLayer);
+    MalaysiaDengueStyler malasyastyler = new MalaysiaDengueStyler();
+    timeViewPanelTool.getTimeSlider().addChangeListener(tLcdChangeEvent -> malasyastyler.setTime(timeViewPanelTool.getTimeSlider().getTime()));
+    ILspInteractivePaintableLayer dengueLayer = TLspShapeLayerBuilder.newBuilder().model(malasya).bodyStyler(TLspPaintState.REGULAR, malasyastyler).build();
+    aView.addLayer(dengueLayer);
 
-      //Daily weather stations
-      Map<WeatherStation, List<DailyWeatherReport>> weatherStationListMap = new StationDailyWeatherDecoder().decodeWeather();
-      TLcdVectorModel dailyWeatherModel = new TLcdVectorModel(new TLcdGeodeticReference(), new TLcdModelDescriptor());
-      for (Map.Entry<WeatherStation, List<DailyWeatherReport>> entry : weatherStationListMap.entrySet()) {
-          dailyWeatherModel.addElement(new WeatherDomainObject(entry.getKey(), entry.getValue()), ILcdModel.NO_EVENT);
-      }
-      WeatherStationStyler weatherStationStyler = new WeatherStationStyler();
-      ILspInteractivePaintableLayer weatherStationLayer = TLspShapeLayerBuilder.newBuilder().model(dailyWeatherModel).bodyStyler(TLspPaintState.REGULAR, weatherStationStyler).build();
-      aView.addLayer(weatherStationLayer);
+    //Daily weather stations
+    Map<WeatherStation, List<DailyWeatherReport>> weatherStationListMap = new StationDailyWeatherDecoder().decodeWeather();
+    TLcdVectorModel dailyWeatherModel = new TLcdVectorModel(new TLcdGeodeticReference(), new TLcdModelDescriptor());
+    for (Map.Entry<WeatherStation, List<DailyWeatherReport>> entry : weatherStationListMap.entrySet()) {
+      dailyWeatherModel.addElement(new WeatherDomainObject(entry.getKey(), entry.getValue()), ILcdModel.NO_EVENT);
+    }
+    WeatherStationStyler weatherStationStyler = new WeatherStationStyler();
+    timeViewPanelTool.getTimeSlider().addChangeListener(tLcdChangeEvent -> weatherStationStyler.setTime(timeViewPanelTool.getTimeSlider().getTime()));
+    ILspInteractivePaintableLayer weatherStationLayer = TLspShapeLayerBuilder.newBuilder().model(dailyWeatherModel).bodyStyler(TLspPaintState.REGULAR, weatherStationStyler).build();
+    aView.addLayer(weatherStationLayer);
   }
 
   @Override
